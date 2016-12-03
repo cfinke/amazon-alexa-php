@@ -10,9 +10,32 @@ class Response {
 	public $card = null;
 	public $reprompt = null;
 	public $shouldEndSession = false;
-
+	
+	public $output = array();
+	
+	public $cardTitle = '';
+	public $cardOutput = array();
+	
 	public function __construct() {
 		$this->outputSpeech = new OutputSpeech;
+	}
+	
+	public function addOutput( $text ) {
+		$this->output[] = $text;
+		
+		return $this;
+	}
+	
+	public function addCardTitle( $title ) {
+		$this->cardTitle = $title;
+		
+		return $this;
+	}
+	
+	public function addCardOutput( $text ) {
+		$this->cardOutput[] = $text;
+		
+		return $this;
 	}
 
         /**
@@ -20,10 +43,10 @@ class Response {
          * @param string $text
          * @return \Alexa\Response\Response
          */
-	public function respond($text) {
+	public function respond() {
 		$this->outputSpeech = new OutputSpeech;
-		$this->outputSpeech->text = $text;
-
+		$this->outputSpeech->text = join( "\n\n", $this->output );
+		
 		return $this;
 	}
         
@@ -32,10 +55,10 @@ class Response {
          * @param string $ssml
          * @return \Alexa\Response\Response
          */
-        public function respondSSML($ssml) {
+        public function respondSSML() {
                 $this->outputSpeech = new OutputSpeech;
                 $this->outputSpeech->type = 'SSML';
-                $this->outputSpeech->ssml = $ssml;
+                $this->outputSpeech->ssml = join( "\n\n", $this->output );
                 
                 return $this;
         }
@@ -104,6 +127,12 @@ class Response {
          * @return type
          */
 	public function render() {
+		if ( $this->cardTitle || ! empty( $this->cardOutput ) ) {
+			$this->card = new Card;
+			$this->card->title = $this->cardTitle;
+			$this->card->content = join( "\n\n", $this->cardOutput );
+		}
+		
 		return array(
 			'version' => $this->version,
 			'sessionAttributes' => $this->sessionAttributes,
